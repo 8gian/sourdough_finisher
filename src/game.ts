@@ -12,7 +12,9 @@ class Resource {
 };
 
 let resourceStore: Record<string, Resource> = {
-  "yeast": new Resource(1, 0),
+  "yeast": new Resource(0, 0),
+  "flour": new Resource(0, 0),
+  "water": new Resource(0, 0),
 };
 
 function render() {
@@ -25,17 +27,25 @@ function render() {
   }
 }
 
-function gameLoop(event: createjs.TickerEvent): void {
-  console.log("foo");
-  const epochDelta = createjs.Ticker.getTime(true) - lastEpochMS;
-  const resourceEpochs = Math.floor(epochDelta / epochInMS);
-  if (resourceEpochs > 0) {
+function evolveResources(epochs : number) {
+  if (epochs > 0) {
     for (let k in resourceStore) {
       const r = resourceStore[k];
-      r.amount += resourceEpochs * r.incPerEpoch;
+      r.amount += epochs * r.incPerEpoch;
     }
-    lastEpochMS += resourceEpochs * epochInMS;
+    lastEpochMS += epochs * epochInMS;
   }
+}
+
+function gameLoop(event: createjs.TickerEvent): void {
+  const epochDelta = createjs.Ticker.getTime(true) - lastEpochMS;
+  const resourceEpochs = Math.floor(epochDelta / epochInMS);
+  evolveResources(resourceEpochs);
+
+  // Update grow rate for yeast based on flour and water
+  let growRate = resourceStore["flour"].amount * resourceStore["water"].amount;
+  resourceStore["yeast"].incPerEpoch = growRate;
+
   render();
 };
 
@@ -44,3 +54,18 @@ createjs.Ticker.framerate = 30.0;
 createjs.Ticker.addEventListener('tick', function (eventObj: Object) {
   gameLoop((<createjs.TickerEvent>eventObj));
 });
+
+window.onload = () => {
+  // Add button click listeners
+  let addFlourButton = document.getElementById("add-flour");
+  addFlourButton!.onclick = () => { 
+    console.log("added flour"); 
+    resourceStore["flour"].amount++
+    } ;
+
+  let addWaterButton = document.getElementById("add-water");
+  addWaterButton!.onclick = () => { 
+    console.log("added water"); 
+    resourceStore["water"].amount++
+    } ;
+}
