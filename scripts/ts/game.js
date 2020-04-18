@@ -2,17 +2,18 @@
 var lastEpochMS = 0;
 var epochInMS = 1000;
 var Resource = /** @class */ (function () {
-    function Resource(incPerEpoch, initialAmount) {
+    function Resource(incPerEpoch, initialAmount, decay) {
         this.amount = initialAmount;
         this.incPerEpoch = incPerEpoch;
+        this.decay = decay;
     }
     return Resource;
 }());
 ;
 var resourceStore = {
-    "yeast": new Resource(0, 0),
-    "flour": new Resource(0, 0),
-    "water": new Resource(0, 0),
+    "yeast": new Resource(0, 0, 1),
+    "flour": new Resource(0, 0, 0),
+    "water": new Resource(0, 0, 0),
 };
 function render() {
     // For now, we assume all resources in stash are in div named stash-resourcename
@@ -28,6 +29,10 @@ function evolveResources(epochs) {
         for (var k in resourceStore) {
             var r = resourceStore[k];
             r.amount += epochs * r.incPerEpoch;
+            r.amount -= epochs * r.decay;
+            if (r.amount < 0) {
+                r.amount = 0;
+            }
         }
         lastEpochMS += epochs * epochInMS;
     }
@@ -39,6 +44,7 @@ function gameLoop(event) {
     // Update grow rate for yeast based on flour and water
     var growRate = resourceStore["flour"].amount * resourceStore["water"].amount;
     resourceStore["yeast"].incPerEpoch = growRate;
+    resourceStore["yeast"].decay = Math.ceil(resourceStore["yeast"].amount / 4);
     render();
 }
 ;
