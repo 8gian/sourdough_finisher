@@ -6,12 +6,32 @@ var Resource = /** @class */ (function () {
         this.amount = initialAmount;
         this.incPerEpoch = incPerEpoch;
         this.decay = decay;
+        this.storedEpochs = 0;
     }
+    ;
+    Resource.prototype.evolve = function (newEpochs) {
+        this.storedEpochs += newEpochs;
+        var amountToAdd = this.storedEpochs * this.incPerEpoch;
+        amountToAdd -= this.storedEpochs * this.decay;
+        if (amountToAdd >= 1 || amountToAdd <= -1) {
+            if (amountToAdd < 0) {
+                amountToAdd = Math.ceil(amountToAdd);
+            }
+            else {
+                amountToAdd = Math.floor(amountToAdd);
+            }
+            this.amount += amountToAdd;
+            if (this.amount < 0) {
+                this.amount = 0;
+            }
+            this.storedEpochs = 0;
+        }
+    };
     return Resource;
 }());
 ;
 var resourceStore = {
-    "yeast": new Resource(0, 0, 1),
+    "yeast": new Resource(0, 0, 0),
     "flour": new Resource(0, 0, 0),
     "water": new Resource(0, 0, 0),
 };
@@ -28,11 +48,7 @@ function evolveResources(epochs) {
     if (epochs > 0) {
         for (var k in resourceStore) {
             var r = resourceStore[k];
-            r.amount += epochs * r.incPerEpoch;
-            r.amount -= epochs * r.decay;
-            if (r.amount < 0) {
-                r.amount = 0;
-            }
+            r.evolve(epochs);
         }
         lastEpochMS += epochs * epochInMS;
     }
