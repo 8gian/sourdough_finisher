@@ -15,9 +15,9 @@ class Resource {
   };
 
   evolve(newEpochs: number) {
-    this.storedEpochs += newEpochs;
-    let amountToAdd = this.storedEpochs * this.incPerEpoch;
-    amountToAdd -= this.storedEpochs * this.decay;
+    const totalEpochs = this.storedEpochs + newEpochs;
+    let amountToAdd = totalEpochs * this.incPerEpoch;
+    amountToAdd -= totalEpochs * this.decay;
     if (amountToAdd >= 1 || amountToAdd <= -1) {
       if (amountToAdd < 0) {
         amountToAdd = Math.ceil(amountToAdd);
@@ -29,6 +29,8 @@ class Resource {
         this.amount = 0;
       }
       this.storedEpochs = 0;
+    } else {
+      this.storedEpochs = totalEpochs;
     }
   }
 };

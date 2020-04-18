@@ -10,9 +10,9 @@ var Resource = /** @class */ (function () {
     }
     ;
     Resource.prototype.evolve = function (newEpochs) {
-        this.storedEpochs += newEpochs;
-        var amountToAdd = this.storedEpochs * this.incPerEpoch;
-        amountToAdd -= this.storedEpochs * this.decay;
+        var totalEpochs = this.storedEpochs + newEpochs;
+        var amountToAdd = totalEpochs * this.incPerEpoch;
+        amountToAdd -= totalEpochs * this.decay;
         if (amountToAdd >= 1 || amountToAdd <= -1) {
             if (amountToAdd < 0) {
                 amountToAdd = Math.ceil(amountToAdd);
@@ -25,6 +25,9 @@ var Resource = /** @class */ (function () {
                 this.amount = 0;
             }
             this.storedEpochs = 0;
+        }
+        else {
+            this.storedEpochs = totalEpochs;
         }
     };
     return Resource;
