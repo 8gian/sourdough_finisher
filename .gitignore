@@ -32,3 +32,6 @@ Session.vim
 
 # Ignore node stuff
 node_modules
+
+# Ignore build product(s)
+dist/build
