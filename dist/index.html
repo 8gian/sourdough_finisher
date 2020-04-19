@@ -1,7 +1,7 @@
 <html>
 <head>
-  <script src="scripts/lib/createjs.min.js"></script>
-  <script src="scripts/ts/game.js"></script>
+  <script src="lib/createjs.min.js"></script>
+  <script src="build/bun.js"></script>
 </head>
 <body>
   <p>
@@ -10,6 +10,8 @@
     Capacity used: <span id="used"></span>
     <br>
     Hunger: <span id="hunger"></span>
+    <br>
+    Health: <span id="health"></span>
     <br>
     Spillage: <span id="spillage"></span>
   </p>
@@ -27,5 +29,16 @@
     <button id="giveaway">Give it away</button>
     <button id="throwaway">Throw away</button>
   </p>
+
+  <h3>debug</h3>
+  <ul>
+    <li>Actual quantity: <span id="debug_quantity"></span></li>
+    <li>Fed: <span id="debug_fed"></span></li>
+    <li>Happy: <span id="debug_happy"></span></li>
+    <li>Waiting: <span id="debug_waiting"></span></li>
+    <li>Hungry: <span id="debug_hungry"></span></li>
+    <li>Starving: <span id="debug_starving"></span></li>
+    <li>Dead: <span id="debug_dead"></span></li>
+  </ul>
 </body>
 </html>
