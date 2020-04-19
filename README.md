@@ -4,7 +4,7 @@
 * VS Code
 * GitHub Desktop
 
-## Mac OS
+## Mac OS Setup
 1. Download Homebrew if you don't already have it 
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
@@ -13,32 +13,17 @@
 ```
 brew install npm
 ```
-3. Install `typescript`
-```
-npm install -g typescript
-```
-4. Install easeljs types
-```
-npm install @types/createjs
-```
 
-## Linux
+## Linux Setup
 1. Install `npm` if you haven't already
-2. Install `typescript`
-```
-npm install -g typescript
-```
-3. Install easeljs types
-```
-npm install @types/createjs
-```
 
 # Compiling
 1. Go repository root.
-2. Run `make`
+2. Run `npm i`
+3. Run `npm start`
 
 # Running
-1. Open `index.html` in a browser
+1. Open [http://localhost:8765/] in a browser
 
 # Commiting code
 Please create your own branch prefixed with your name or github name (e.g. `8/my-brach`), and then merge it in using the interface on [github.com](https://github.com/8gian/sourdough_finisher). Try not to commit code that doesn't compile.
