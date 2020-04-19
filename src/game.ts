@@ -1,6 +1,7 @@
-/// <reference path="../node_modules/@types/easeljs/index.d.ts" />
 import {
     yeastVolume,
+    yeastAmount,
+    removeYeast,
     hunger,
     health,
     stepYeast,
@@ -16,7 +17,17 @@ let jarVolume: number = 32;
 let filledVolume: number = 0;
 let spillage: number = 0;
 
-let GLOBAL_YEAST: YeastyGoodness = { fed: 1, happy: 0, waiting: 0, hungry: 0, starving: 0, dead: 2 };
+type ResourcesType = {
+    yeast: YeastyGoodness,
+    good: number,
+    bread: number,
+}
+
+let Resources: ResourcesType = {
+    yeast: { fed: 1, happy: 0, waiting: 0, hungry: 0, starving: 0, dead: 2 },
+    good: 0,
+    bread: 0,
+}
 
 function setElement(id: string, contents: string) {
     const elem = document.getElementById(id);
@@ -29,20 +40,21 @@ function render() {
     document.getElementById('jar-capacity')!.innerText = '' + jarVolume;
     document.getElementById('used')!.innerText = '' + filledVolume;
     document.getElementById('spillage')!.innerText = '' + spillage;
-    document.getElementById('used')!.innerText = `${yeastVolume(GLOBAL_YEAST)}`;
-    document.getElementById('hunger')!.innerText = `${Math.round(hunger(GLOBAL_YEAST) * 100)}%`;
-    document.getElementById('health')!.innerText = `${Math.round(health(GLOBAL_YEAST) * 100)}%`;
+    document.getElementById('used')!.innerText = `${yeastVolume(Resources.yeast)}`;
+    document.getElementById('hunger')!.innerText = `${Math.round(hunger(Resources.yeast) * 100)}%`;
+    document.getElementById('health')!.innerText = `${Math.round(health(Resources.yeast) * 100)}%`;
+    document.getElementById('stash-bread')!.innerText = `${Resources.bread}`;
 
-    const fractions: YeastyGoodness = calculateFractions(GLOBAL_YEAST);
+    const fractions: YeastyGoodness = calculateFractions(Resources.yeast);
     setElement(
         'debug_quantity',
         `${
-            GLOBAL_YEAST.fed +
-            GLOBAL_YEAST.happy +
-            GLOBAL_YEAST.waiting +
-            GLOBAL_YEAST.hungry +
-            GLOBAL_YEAST.starving +
-            GLOBAL_YEAST.dead
+        Resources.yeast.fed +
+        Resources.yeast.happy +
+        Resources.yeast.waiting +
+        Resources.yeast.hungry +
+        Resources.yeast.starving +
+        Resources.yeast.dead
         }`
     );
     setElement('debug_fed', `${Math.round(fractions.fed * 100)}%`);
@@ -55,7 +67,7 @@ function render() {
 
 function evolveResources(epochs: number) {
     for (let i = 0; i < epochs; i++) {
-        GLOBAL_YEAST = stepYeast(GLOBAL_YEAST);
+        Resources.yeast = stepYeast(Resources.yeast);
     }
 }
 
@@ -67,8 +79,8 @@ function gameLoop(event: createjs.TickerEvent): void {
         lastEpochMS += resourceEpochs * epochInMS;
     }
 
-    const [newYeast, newSpill] = clampYeast(jarVolume, GLOBAL_YEAST);
-    GLOBAL_YEAST = newYeast;
+    const [newYeast, newSpill] = clampYeast(jarVolume, Resources.yeast);
+    Resources.yeast = newYeast;
     spillage += newSpill;
 
     render();
@@ -81,14 +93,14 @@ createjs.Ticker.addEventListener('tick', function (eventObj: Object) {
 
 function addFood() {
     console.log('Adding food')!;
-    console.log(GLOBAL_YEAST);
-    GLOBAL_YEAST = feedYeast(1, GLOBAL_YEAST);
-    console.log(GLOBAL_YEAST);
-    const [newYeast, newSpill] = clampYeast(jarVolume, GLOBAL_YEAST);
-    GLOBAL_YEAST = newYeast;
+    console.log(Resources.yeast);
+    Resources.yeast = feedYeast(1, Resources.yeast);
+    console.log(Resources.yeast);
+    const [newYeast, newSpill] = clampYeast(jarVolume, Resources.yeast);
+    Resources.yeast = newYeast;
     console.log(newYeast);
     spillage += newSpill;
-    console.log(GLOBAL_YEAST);
+    console.log(Resources.yeast);
 }
 
 window.onload = () => {
@@ -102,30 +114,46 @@ window.onload = () => {
     /* all actions below (currently 5 - bake / another-jar / trade / ga / ta)
   need to decrease the volume by 50%
   */
-    let bakeButton = document.getElementById('bake');
+    let bakeButton = document.getElementById("bake");
     bakeButton!.onclick = () => {
-        // + some breads (max amount)
+        const yeastLost = half(yeastAmount(Resources.yeast));
+        let result = removeYeast(Resources.yeast, yeastLost);
+        if (!result) return
+        Resources.yeast = result.remaining;
+        Resources.bread += yeastLost;
     };
 
-    let anotherJarButton = document.getElementById('another-jar');
+    let anotherJarButton = document.getElementById("another-jar");
     anotherJarButton!.onclick = () => {
         // Space left in jar increases by 1024 (jar capacity)
         // % Health increases
     };
 
-    let tradeButton = document.getElementById('trade');
+    let tradeButton = document.getElementById("trade");
     tradeButton!.onclick = () => {
         // You gain a “something” (we don’t know the value yet)
     };
 
-    let giveawayButton = document.getElementById('giveaway');
+    let giveawayButton = document.getElementById("giveaway");
     giveawayButton!.onclick = () => {
         // You gain some amount of “good” -- hidden counter to be revealed later
+        const yeastLost = half(yeastAmount(Resources.yeast));
+        let result = removeYeast(Resources.yeast, yeastLost);
+        if (!result) return
+        Resources.yeast = result.remaining;
+        Resources.good += yeastLost;
+        console.log(Resources.good)
     };
 
-    let throwawayButton = document.getElementById('throwaway');
+    let throwawayButton = document.getElementById("throwaway");
     throwawayButton!.onclick = () => {
-        //    resourceStore["yeast"].amount = Math.ceil(resourceStore["yeast"].amount * 0.5)
-        //    resourceStore["food"].amount = Math.ceil(resourceStore["food"].amount * 0.5)
+        const yeastLost = half(yeastAmount(Resources.yeast));
+        let result = removeYeast(Resources.yeast, yeastLost);
+        if (!result) return
+        Resources.yeast = result.remaining;
     };
-};
+}
+
+function half(amount: number): number {
+    return Math.floor(amount / 2)
+}

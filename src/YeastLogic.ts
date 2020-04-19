@@ -47,6 +47,74 @@ const constants: {
     },
 };
 
+type ConstantYeast = {
+    readonly fed: number,
+    readonly happy: number,
+    readonly waiting: number,
+    readonly hungry: number,
+    readonly starving: number,
+    readonly dead: number,
+}
+
+const emptyYeast: ConstantYeast = {
+    fed: 0,
+    happy: 0,
+    waiting: 0,
+    hungry: 0,
+    starving: 0,
+    dead: 0,
+}
+
+export function constantYeast(yeast: YeastyGoodness): ConstantYeast {
+    return yeast;
+}
+
+export function addYeast(yeast: YeastyGoodness, newYeast: YeastyGoodness): YeastyGoodness {
+    return {
+        fed: yeast.fed + newYeast.fed,
+        happy: yeast.happy + newYeast.happy,
+        waiting: yeast.waiting + newYeast.waiting,
+        hungry: yeast.hungry + newYeast.hungry,
+        starving: yeast.starving + newYeast.starving,
+        dead: yeast.dead + newYeast.dead,
+    };
+}
+
+export function mapYeast(yeast: YeastyGoodness, f: (prop: number) => number): YeastyGoodness {
+    return {
+        fed: f(yeast.fed),
+        happy: f(yeast.happy),
+        waiting: f(yeast.waiting),
+        hungry: f(yeast.hungry),
+        starving: f(yeast.fed),
+        dead: f(yeast.dead),
+    }
+}
+
+export function copyYeast(yeast: YeastyGoodness): YeastyGoodness {
+    return Object.assign({}, yeast);
+}
+
+export function yeastLessThanEqual(yeast: YeastyGoodness, yeast2: YeastyGoodness): boolean {
+    return yeast.fed <= yeast2.fed && yeast.happy <= yeast2.happy && yeast.waiting <= yeast2.waiting && yeast.hungry <= yeast2.hungry && yeast.starving <= yeast2.starving && yeast.dead <= yeast2.dead;
+}
+
+export function yeastLessThan(yeast: YeastyGoodness, yeast2: YeastyGoodness): boolean {
+    return yeast.fed < yeast2.fed && yeast.happy <= yeast2.happy && yeast.waiting <= yeast2.waiting && yeast.hungry <= yeast2.hungry && yeast.starving <= yeast2.starving && yeast.dead <= yeast2.dead;
+}
+
+export function subtractYeast(yeast: YeastyGoodness, yeast2: YeastyGoodness): YeastyGoodness {
+    const resultYeast = {
+        fed: yeast.fed - yeast2.fed,
+        happy: yeast.happy - yeast2.happy,
+        waiting: yeast.waiting - yeast2.waiting,
+        hungry: yeast.hungry - yeast2.hungry,
+        starving: yeast.starving - yeast2.starving,
+        dead: yeast.dead - yeast2.dead,
+    };
+    return resultYeast;
+}
+
 export function hunger(yeast: YeastyGoodness): number {
     const alive = yeast.fed + yeast.happy + yeast.waiting + yeast.hungry + yeast.starving;
     const hungerAbsolute =
@@ -162,4 +230,33 @@ export function clampYeast(maxVolume: number, yeast: YeastyGoodness): [YeastyGoo
         },
         volume - maxVolume,
     ];
+}
+
+export function yeastAmount(yeast: YeastyGoodness): number {
+    return yeast.fed + yeast.happy + yeast.waiting + yeast.hungry + yeast.starving + yeast.dead;
+}
+
+export function livingYeastAmount(yeast: YeastyGoodness): number {
+    return yeast.fed + yeast.happy + yeast.waiting + yeast.hungry + yeast.starving;
+}
+
+export function removeYeast(yeast: YeastyGoodness, amount: number): { remaining: YeastyGoodness, removed: YeastyGoodness } | null {
+    const takeout = Math.floor(amount);
+    const currentAmount = yeastAmount(yeast);
+    if (takeout < 1) {
+        return null
+    }
+    if (takeout > currentAmount - 1) {
+        return null
+    }
+    const takeoutFraction = takeout / yeastAmount(yeast);
+    let removed = mapYeast(yeast, (prop) => Math.min(prop * takeoutFraction, prop));
+    let remaining = subtractYeast(yeast, removed);
+    // Just in case something went negative!
+    remaining = mapYeast(remaining, (prop) => Math.max(0, prop));
+    const removedAmount = yeastAmount(yeast);
+    if (removedAmount < takeout) {
+        removed.dead = removedAmount - takeout;
+    }
+    return { remaining: remaining, removed: removed };
 }
