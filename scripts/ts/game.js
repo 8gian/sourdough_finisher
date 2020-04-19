@@ -35,8 +35,7 @@ var Resource = /** @class */ (function () {
 ;
 var resourceStore = {
     "yeast": new Resource(0, 0, 0),
-    "flour": new Resource(0, 0, 0),
-    "water": new Resource(0, 0, 0),
+    "food": new Resource(0, 0, 0)
 };
 function render() {
     // For now, we assume all resources in stash are in div named stash-resourcename
@@ -60,8 +59,8 @@ function gameLoop(event) {
     var epochDelta = createjs.Ticker.getTime(true) - lastEpochMS;
     var resourceEpochs = Math.floor(epochDelta / epochInMS);
     evolveResources(resourceEpochs);
-    // Update grow rate for yeast based on flour and water
-    var growRate = resourceStore["flour"].amount * resourceStore["water"].amount;
+    // Update grow rate for yeast based on food
+    var growRate = Math.pow(resourceStore["food"].amount, 2);
     resourceStore["yeast"].incPerEpoch = growRate;
     resourceStore["yeast"].decay = Math.ceil(resourceStore["yeast"].amount / 4);
     render();
@@ -73,14 +72,32 @@ createjs.Ticker.addEventListener('tick', function (eventObj) {
 });
 window.onload = function () {
     // Add button click listeners
-    var addFlourButton = document.getElementById("add-flour");
-    addFlourButton.onclick = function () {
-        console.log("added flour");
-        resourceStore["flour"].amount++;
+    var addFoodButton = document.getElementById("add-food");
+    addFoodButton.onclick = function () {
+        console.log("added food");
+        resourceStore["food"].amount++;
     };
-    var addWaterButton = document.getElementById("add-water");
-    addWaterButton.onclick = function () {
-        console.log("added water");
-        resourceStore["water"].amount++;
+    /* all actions below (currently 5 - bake / another-jar / trade / ga / ta)
+    need to decrease the volume by 50%
+    */
+    var bakeButton = document.getElementById("bake");
+    bakeButton.onclick = function () {
+        // + some breads (max amount)
+    };
+    var anotherJarButton = document.getElementById("another-jar");
+    anotherJarButton.onclick = function () {
+        // Space left in jar increases by 1024 (jar capacity)
+        // % Health increases
+    };
+    var tradeButton = document.getElementById("trade");
+    tradeButton.onclick = function () {
+        // You gain a “something” (we don’t know the value yet)
+    };
+    var giveawayButton = document.getElementById("giveaway");
+    giveawayButton.onclick = function () {
+        // You gain some amount of “good” -- hidden counter to be revealed later 
+    };
+    var throwawayButton = document.getElementById("throwaway");
+    throwawayButton.onclick = function () {
     };
 };

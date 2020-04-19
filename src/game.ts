@@ -37,8 +37,7 @@ class Resource {
 
 let resourceStore: Record<string, Resource> = {
   "yeast": new Resource(0, 0, 0),
-  "flour": new Resource(0, 0, 0),
-  "water": new Resource(0, 0, 0),
+  "food": new Resource(0, 0, 0)
 };
 
 function render() {
@@ -66,8 +65,8 @@ function gameLoop(event: createjs.TickerEvent): void {
   const resourceEpochs = Math.floor(epochDelta / epochInMS);
   evolveResources(resourceEpochs);
 
-  // Update grow rate for yeast based on flour and water
-  const growRate = resourceStore["flour"].amount * resourceStore["water"].amount;
+  // Update grow rate for yeast based on food
+  const growRate = Math.pow(resourceStore["food"].amount, 2)
   resourceStore["yeast"].incPerEpoch = growRate;
   resourceStore["yeast"].decay = Math.ceil(resourceStore["yeast"].amount / 4);
 
@@ -82,15 +81,37 @@ createjs.Ticker.addEventListener('tick', function (eventObj: Object) {
 
 window.onload = () => {
   // Add button click listeners
-  let addFlourButton = document.getElementById("add-flour");
-  addFlourButton!.onclick = () => {
-    console.log("added flour");
-    resourceStore["flour"].amount++
+  let addFoodButton = document.getElementById("add-food");
+  addFoodButton!.onclick = () => {
+    console.log("added food");
+    resourceStore["food"].amount++
   };
 
-  let addWaterButton = document.getElementById("add-water");
-  addWaterButton!.onclick = () => {
-    console.log("added water");
-    resourceStore["water"].amount++
+  /* all actions below (currently 5 - bake / another-jar / trade / ga / ta)
+  need to decrease the volume by 50%
+  */
+  let bakeButton = document.getElementById("bake");
+  bakeButton!.onclick = () => {
+    // + some breads (max amount)
+  };
+
+  let anotherJarButton = document.getElementById("another-jar");
+  anotherJarButton!.onclick = () => {
+    // Space left in jar increases by 1024 (jar capacity)
+    // % Health increases
+  };
+
+  let tradeButton = document.getElementById("trade");
+  tradeButton!.onclick = () => {
+    // You gain a “something” (we don’t know the value yet)
+  };
+
+  let giveawayButton = document.getElementById("giveaway");
+  giveawayButton!.onclick = () => {
+    // You gain some amount of “good” -- hidden counter to be revealed later 
+  };
+
+  let throwawayButton = document.getElementById("throwaway");
+  throwawayButton!.onclick = () => {
   };
 }
