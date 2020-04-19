@@ -1,5 +1,8 @@
 let lastEpochMS: number = 0;
 let epochInMS: number = 1000;
+let jarVolume: number = 32;
+let filledVolume: number = 0;
+let spillage: number = 0;
 
 class Resource {
   amount: number;
@@ -41,6 +44,11 @@ let resourceStore: Record<string, Resource> = {
 };
 
 function render() {
+  // Render the jar
+  document.getElementById("jar-capacity")!.innerText = ""+jarVolume;
+  document.getElementById("used")!.innerText = ""+filledVolume;
+  document.getElementById("spillage")!.innerText = ""+spillage;
+
   // For now, we assume all resources in stash are in div named stash-resourcename
   for (let k in resourceStore) {
     const elem = document.getElementById("stash-" + k);
@@ -66,9 +74,17 @@ function gameLoop(event: createjs.TickerEvent): void {
   evolveResources(resourceEpochs);
 
   // Update grow rate for yeast based on food
-  const growRate = resourceStore["food"].amount
-  resourceStore["yeast"].incPerEpoch = growRate;
-  // resourceStore["yeast"].decay = Math.ceil(resourceStore["yeast"].amount / 4);
+  const foodVolume = resourceStore["food"].amount;
+  const yeastVolume = resourceStore["yeast"].amount / 10;
+  resourceStore["yeast"].incPerEpoch = foodVolume;
+
+  filledVolume = foodVolume;
+  filledVolume += yeastVolume;
+
+  if(filledVolume > jarVolume) {
+    spillage = filledVolume - jarVolume;
+    filledVolume = jarVolume;
+  }
 
   render();
 };
@@ -78,12 +94,20 @@ createjs.Ticker.addEventListener('tick', function (eventObj: Object) {
   gameLoop((<createjs.TickerEvent>eventObj));
 });
 
+function addFood() {
+  if(filledVolume + 1 <= jarVolume) {
+    resourceStore["food"].amount++;
+  } else {
+    console.log("Jar full!")
+  }
+}
+
 window.onload = () => {
   // Add button click listeners
   let addFoodButton = document.getElementById("add-food");
   addFoodButton!.onclick = () => {
-    console.log("added food");
-    resourceStore["food"].amount++
+    console.log("trying to add food");
+    addFood();
   };
 
   /* all actions below (currently 5 - bake / another-jar / trade / ga / ta)

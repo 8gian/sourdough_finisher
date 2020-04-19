@@ -1,6 +1,9 @@
 "use strict";
 var lastEpochMS = 0;
 var epochInMS = 1000;
+var jarVolume = 32;
+var filledVolume = 0;
+var spillage = 0;
 var Resource = /** @class */ (function () {
     function Resource(incPerEpoch, initialAmount, decay) {
         this.amount = initialAmount;
@@ -38,6 +41,10 @@ var resourceStore = {
     "food": new Resource(0, 0, 0.5)
 };
 function render() {
+    // Render the jar
+    document.getElementById("jar-capacity").innerText = "" + jarVolume;
+    document.getElementById("used").innerText = "" + filledVolume;
+    document.getElementById("spillage").innerText = "" + spillage;
     // For now, we assume all resources in stash are in div named stash-resourcename
     for (var k in resourceStore) {
         var elem = document.getElementById("stash-" + k);
@@ -60,9 +67,15 @@ function gameLoop(event) {
     var resourceEpochs = Math.floor(epochDelta / epochInMS);
     evolveResources(resourceEpochs);
     // Update grow rate for yeast based on food
-    var growRate = resourceStore["food"].amount;
-    resourceStore["yeast"].incPerEpoch = growRate;
-    // resourceStore["yeast"].decay = Math.ceil(resourceStore["yeast"].amount / 4);
+    var foodVolume = resourceStore["food"].amount;
+    var yeastVolume = resourceStore["yeast"].amount / 10;
+    resourceStore["yeast"].incPerEpoch = foodVolume;
+    filledVolume = foodVolume;
+    filledVolume += yeastVolume;
+    if (filledVolume > jarVolume) {
+        spillage = filledVolume - jarVolume;
+        filledVolume = jarVolume;
+    }
     render();
 }
 ;
@@ -70,12 +83,20 @@ createjs.Ticker.framerate = 30.0;
 createjs.Ticker.addEventListener('tick', function (eventObj) {
     gameLoop(eventObj);
 });
+function addFood() {
+    if (filledVolume + 1 <= jarVolume) {
+        resourceStore["food"].amount++;
+    }
+    else {
+        console.log("Jar full!");
+    }
+}
 window.onload = function () {
     // Add button click listeners
     var addFoodButton = document.getElementById("add-food");
     addFoodButton.onclick = function () {
-        console.log("added food");
-        resourceStore["food"].amount++;
+        console.log("trying to add food");
+        addFood();
     };
     /* all actions below (currently 5 - bake / another-jar / trade / ga / ta)
     need to decrease the volume by 50%
