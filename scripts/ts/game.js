@@ -35,7 +35,7 @@ var Resource = /** @class */ (function () {
 ;
 var resourceStore = {
     "yeast": new Resource(0, 0, 0),
-    "food": new Resource(0, 0, 0)
+    "food": new Resource(0, 0, 0.5)
 };
 function render() {
     // For now, we assume all resources in stash are in div named stash-resourcename
@@ -60,9 +60,9 @@ function gameLoop(event) {
     var resourceEpochs = Math.floor(epochDelta / epochInMS);
     evolveResources(resourceEpochs);
     // Update grow rate for yeast based on food
-    var growRate = Math.pow(resourceStore["food"].amount, 2);
+    var growRate = resourceStore["food"].amount;
     resourceStore["yeast"].incPerEpoch = growRate;
-    resourceStore["yeast"].decay = Math.ceil(resourceStore["yeast"].amount / 4);
+    // resourceStore["yeast"].decay = Math.ceil(resourceStore["yeast"].amount / 4);
     render();
 }
 ;
@@ -99,5 +99,7 @@ window.onload = function () {
     };
     var throwawayButton = document.getElementById("throwaway");
     throwawayButton.onclick = function () {
+        resourceStore["yeast"].amount = Math.ceil(resourceStore["yeast"].amount * 0.5);
+        resourceStore["food"].amount = Math.ceil(resourceStore["food"].amount * 0.5);
     };
 };

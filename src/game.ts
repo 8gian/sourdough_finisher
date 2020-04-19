@@ -37,7 +37,7 @@ class Resource {
 
 let resourceStore: Record<string, Resource> = {
   "yeast": new Resource(0, 0, 0),
-  "food": new Resource(0, 0, 0)
+  "food": new Resource(0, 0, 0.5)
 };
 
 function render() {
@@ -66,13 +66,12 @@ function gameLoop(event: createjs.TickerEvent): void {
   evolveResources(resourceEpochs);
 
   // Update grow rate for yeast based on food
-  const growRate = Math.pow(resourceStore["food"].amount, 2)
+  const growRate = resourceStore["food"].amount
   resourceStore["yeast"].incPerEpoch = growRate;
-  resourceStore["yeast"].decay = Math.ceil(resourceStore["yeast"].amount / 4);
+  // resourceStore["yeast"].decay = Math.ceil(resourceStore["yeast"].amount / 4);
 
   render();
 };
-
 
 createjs.Ticker.framerate = 30.0;
 createjs.Ticker.addEventListener('tick', function (eventObj: Object) {
@@ -113,5 +112,7 @@ window.onload = () => {
 
   let throwawayButton = document.getElementById("throwaway");
   throwawayButton!.onclick = () => {
+    resourceStore["yeast"].amount = Math.ceil(resourceStore["yeast"].amount * 0.5)
+    resourceStore["food"].amount = Math.ceil(resourceStore["food"].amount * 0.5)
   };
 }
