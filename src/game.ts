@@ -211,9 +211,14 @@ window.onload = () => {
             addMessage("There's not enough yeast to give away!");
             return
         }
+        if (health(result.removed) < 0.8) {
+            addMessage("Ewwwwww! No one would take your sickly yeast. You had to throw it out.");
+            Resources.good--;
+        } else {
+            addMessage("You gave away half of your yeast!");
+            Resources.good += Math.round(yeastLost * health(result.removed));
+        }
         Resources.yeast = result.remaining;
-        Resources.good += yeastLost;
-        addMessage("You gave away half of your yeast!");
     };
 
     let throwawayButton = document.getElementById("throwaway");
