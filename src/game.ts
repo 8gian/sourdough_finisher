@@ -43,7 +43,6 @@ function render() {
     document.getElementById('used')!.innerText = `${yeastVolume(Resources.yeast)}`;
     document.getElementById('hunger')!.innerText = `${Math.round(hunger(Resources.yeast) * 100)}%`;
     document.getElementById('health')!.innerText = `${Math.round(health(Resources.yeast) * 100)}%`;
-    document.getElementById('star')!.innerText = `${Math.round(health(Resources.yeast) * 100)}%`;
     document.getElementById('stash-bread')!.innerText = `${Resources.bread}`;
 
     const fractions: YeastyGoodness = calculateFractions(Resources.yeast);
