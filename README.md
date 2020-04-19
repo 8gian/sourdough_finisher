@@ -17,13 +17,20 @@ brew install npm
 ## Linux Setup
 1. Install `npm` if you haven't already
 
-# Compiling
+# Running (webpack-dev-server)
 1. Go repository root.
 2. Run `npm i`
 3. Run `npm start`
+4. Open [http://localhost:8765/] in a browser
 
-# Running
-1. Open [http://localhost:8765/] in a browser
+# Building
+1. Go to repository root.
+2. Run `npm i`
+3. Run `npm run webpack`
+4. Open `dist/index.html` in a browser
+
+If you want the typechecker/builder to run all the time whenever you change a file,
+you can do `npm run watch` in step 2.
 
 # Commiting code
 Please create your own branch prefixed with your name or github name (e.g. `8/my-brach`), and then merge it in using the interface on [github.com](https://github.com/8gian/sourdough_finisher). Try not to commit code that doesn't compile.
