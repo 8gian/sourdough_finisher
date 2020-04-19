@@ -1,5 +1,5 @@
 /// <reference path="../node_modules/@types/easeljs/index.d.ts" />
-import { yeastVolume, hunger, health, stepYeast, clampYeast, feedYeast, YeastyGoodness } from "./YeastLogic";
+import { yeastVolume, hunger, health, stepYeast, clampYeast, feedYeast, YeastyGoodness, calculateFractions } from "./YeastLogic";
 
 let lastEpochMS: number = 0;
 let epochInMS: number = 1000;
@@ -11,6 +11,12 @@ let spillage: number = 0;
 
 let GLOBAL_YEAST : YeastyGoodness = { fed : 1, happy : 0, waiting : 0, hungry : 0, starving : 0, dead : 2 };
 
+function setElement(id: string, contents: string) {
+  const elem = document.getElementById(id);
+  if (!elem) return;
+  elem.innerText = contents;
+}
+
 function render() {
   // Render the jar
   document.getElementById("jar-capacity")!.innerText = ""+jarVolume;
@@ -19,15 +25,15 @@ function render() {
   document.getElementById("used")!.innerText = `${yeastVolume(GLOBAL_YEAST)}`;
   document.getElementById("hunger")!.innerText = `${Math.round(hunger(GLOBAL_YEAST)*100)}%`
   document.getElementById("health")!.innerText = `${Math.round(health(GLOBAL_YEAST)*100)}%`
-  // For now, we assume all resources in stash are in div named stash-resourcename
-/*
-  for (let k in resourceStore) {
-    const elem = document.getElementById("stash-" + k);
-    if (elem != null) {
-      elem.innerText = `${resourceStore[k].amount}`;
-    }
-  }
-*/
+
+  const fractions: YeastyGoodness = calculateFractions(GLOBAL_YEAST);
+  setElement('debug_quantity', `${GLOBAL_YEAST.fed + GLOBAL_YEAST.happy + GLOBAL_YEAST.waiting + GLOBAL_YEAST.hungry + GLOBAL_YEAST.starving + GLOBAL_YEAST.dead}`);
+  setElement('debug_fed', `${Math.round(fractions.fed * 100)}%`);
+  setElement('debug_happy', `${Math.round(fractions.happy * 100)}%`);
+  setElement('debug_waiting', `${Math.round(fractions.waiting * 100)}%`);
+  setElement('debug_hungry', `${Math.round(fractions.hungry * 100)}%`);
+  setElement('debug_starving', `${Math.round(fractions.starving * 100)}%`);
+  setElement('debug_dead', `${Math.round(fractions.dead * 100)}%`);
 }
 
 function evolveResources(epochs: number) {

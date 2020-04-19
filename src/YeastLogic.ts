@@ -14,11 +14,11 @@ const constants: {
     volumeMultiplier: YeastyGoodness,
 } = {
     maturationRate: {
-        fed: 0.05,
-        happy: 0.05,
-        waiting: 0.01,
-        hungry: 0.01,
-        starving: 0.005,
+        fed: 0.1,
+        happy: 0.1,
+        waiting: 0.05,
+        hungry: 0.05,
+        starving: 0.05,
         dead: 0.0,
       },
     healthMultiplier: {
@@ -114,7 +114,7 @@ export function hunger(yeast: YeastyGoodness): number {
       // Some feed goes to waste as dead material
       console.log("C");
       return {
-        fed : (yeast.fed + yeast.happy + yeast.waiting + yeast.hungry + yeast.starving) * 2,
+        fed : yeast.fed + (yeast.happy + yeast.waiting + yeast.hungry + yeast.starving) * 2,
         happy : 0,
         waiting : 0,
         hungry : 0,
@@ -123,6 +123,19 @@ export function hunger(yeast: YeastyGoodness): number {
       };
     }
   }
+
+
+export function calculateFractions(yeast: YeastyGoodness): YeastyGoodness {
+    const total = yeast.fed + yeast.happy + yeast.waiting + yeast.hungry + yeast.starving + yeast.dead;
+    return {
+        fed: yeast.fed / total,
+        happy: yeast.happy / total,
+        waiting: yeast.waiting / total,
+        hungry : yeast.hungry / total,
+        starving : yeast.starving / total,
+        dead : yeast.dead / total,
+    }
+}
   
 export  function yeastVolume(yeast: YeastyGoodness): number {
     return yeast.fed * constants.volumeMultiplier.fed
