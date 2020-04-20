@@ -14,35 +14,104 @@ import {
 
 let lastEpochMS: number = 0;
 let epochInMS: number = 1000;
+const newJarVolume: number = 32;
+
+// Initialize
+let spillage: number = 0;
+let ovenSize: number = 1;
+let canBake: boolean = false;
 let jarVolume: number = 32;
 let filledVolume: number = 0;
-let spillage: number = 0;
+
+class IntegralRefillingResource {
+    amount: number = 0;
+    epochsPerRefresh: number = 0;
+    remainingEpochs: number = 0;
+    increasePerRefresh: number = 0;
+    limit: number = 0;
+    onIncrease: (() => void) | undefined;
+
+    constructor(amount: number, increasePerRefresh: number, epochsPerRefresh: number, limit: number, onIncrease?: (() => void)) {
+        this.amount = amount;
+        this.epochsPerRefresh = epochsPerRefresh;
+        this.increasePerRefresh = increasePerRefresh;
+        this.remainingEpochs = Math.max(Math.floor(epochsPerRefresh), 1);
+        this.limit = limit;
+        this.onIncrease = onIncrease;
+    }
+
+    step() {
+        const epr = Math.max(Math.floor(this.epochsPerRefresh), 1);
+        const ipr = Math.max(Math.floor(this.increasePerRefresh), 0);
+        if (ipr > 0) {
+            return;
+        }
+        this.remainingEpochs--;
+        if (this.remainingEpochs < 1) {
+            if (this.onIncrease) {
+                this.onIncrease();
+            }
+            this.remainingEpochs = epr;
+            this.amount += ipr;
+            if (this.amount > this.limit) {
+                this.amount = this.limit;
+            }
+        }
+    }
+}
 
 type ResourcesType = {
     yeast: YeastyGoodness,
     good: number,
     bread: number,
-}
+    jars: number,
+    newJars: IntegralRefillingResource,
+};
 
 let dead: boolean = false;
 
+function onFindJar() {
+    let anotherJarButton = document.getElementById("another-jar");
+    if (anotherJarButton) {
+        anotherJarButton.style.display = "inline";
+    }
+    addMessage("You found another jar.");
+}
+
+function checkFirstBake() {
+    if (canBake) {
+        return
+    }
+    if (yeastAmount(Resources.yeast) >= Resources.jars + 1 && health(Resources.yeast) >= .8) {
+        canBake = true;
+        addMessage("Your parents call and give you a delicious bread recipe.");
+    }
+}
+
 let Resources: ResourcesType = {
-    yeast: { fed: 1, happy: 0, waiting: 0, hungry: 0, starving: 0, dead: 2 },
+    yeast: { fed: 2, happy: 0, waiting: 0, hungry: 0, starving: 0, dead: 1 },
     good: 0,
     bread: 0,
-}
+    jars: 1,
+    newJars: new IntegralRefillingResource(0, 1, 30, 4, onFindJar),
+};
+
 let resetButtons = () => { };
 
 function initializeGame() {
     messages = [];
     jarVolume = 32;
     filledVolume = 0;
+    ovenSize = 1;
     spillage = 0;
     dead = false;
+    canBake = false;
     Resources = {
-        yeast: { fed: 1, happy: 0, waiting: 0, hungry: 0, starving: 0, dead: 2 },
+        yeast: { fed: 2, happy: 0, waiting: 0, hungry: 0, starving: 0, dead: 1 },
         good: 0,
         bread: 0,
+        jars: 1,
+        newJars: new IntegralRefillingResource(0, 1, 30, 4, onFindJar),
     };
     resetButtons();
 }
@@ -75,8 +144,7 @@ function setElementHTML(id: string, contents: string) {
 function render() {
     // Render the jar
     document.getElementById('jar-capacity')!.innerText = '' + jarVolume;
-    document.getElementById('used')!.innerText = '' + filledVolume;
-    document.getElementById('used')!.innerText = `${yeastVolume(Resources.yeast)}`;
+    document.getElementById('used')!.innerText = `${Math.floor(yeastVolume(Resources.yeast) / jarVolume * 100)}%`;
     document.getElementById('hunger')!.innerText = `${Math.round(hunger(Resources.yeast) * 100)}%`;
     document.getElementById('health')!.innerText = `${Math.round(health(Resources.yeast) * 100)}%`;
     document.getElementById('spillage')!.innerText = `${Math.round(spillage * 100) / 100}`;
@@ -107,6 +175,7 @@ function evolveResources(epochs: number) {
     for (let i = 0; i < epochs; i++) {
         Resources.yeast = stepYeast(Resources.yeast);
     }
+    checkFirstBake();
 }
 
 function gameLoop(event: createjs.TickerEvent): void {
@@ -171,8 +240,8 @@ window.onload = () => {
   */
     let bakeButton = document.getElementById("bake");
     bakeButton!.onclick = () => {
-        const yeastLost = half(yeastAmount(Resources.yeast));
-        let result = removeYeast(Resources.yeast, yeastLost);
+        let yeastLost = Math.floor(Math.max(yeastAmount(Resources.yeast) - Resources.jars, ovenSize));
+        let result = removeYeast(Resources.yeast, 2, Resources.jars);
         if (!result) {
             addMessage("There's not enough yeast to bake with!");
             return
@@ -182,12 +251,26 @@ window.onload = () => {
             addMessage("You tried to bake with the yeast but it turned out terrible!");
         } else {
             addMessage(`You baked ${yeastLost} delicious loaves of bread!`);
+            let giveawayButton = document.getElementById("giveaway");
+            if (giveawayButton) {
+                giveawayButton.style.display = "inline";
+            }
             Resources.bread += yeastLost;
         }
     };
 
     let anotherJarButton = document.getElementById("another-jar");
     anotherJarButton!.onclick = () => {
+        if (Resources.newJars.amount < 1) {
+            addMessage("Drat! You can't find any more jars right now.");
+        } else if (yeastVolume(Resources.yeast) > Resources.jars + 1) {
+            addMessage("You scoop some starter from each of your jars and put it in a new jar!");
+            Resources.jars++;
+            Resources.newJars.amount--;
+            jarVolume += 32;
+        } else {
+            addMessage("There isn't enough yeast to move into a new jar.");
+        }
         // Space left in jar increases by 1024 (jar capacity)
         // % Health increases
     };
@@ -206,25 +289,15 @@ window.onload = () => {
     giveawayButton!.onclick = () => {
         // You gain some amount of “good” -- hidden counter to be revealed later
         const yeastLost = half(yeastAmount(Resources.yeast));
-        let result = removeYeast(Resources.yeast, yeastLost);
-        if (!result) {
-            addMessage("There's not enough yeast to give away!");
-            return
-        }
-        if (health(result.removed) < 0.8) {
-            addMessage("Ewwwwww! No one would take your sickly yeast. You had to throw it out.");
-            Resources.good--;
-        } else {
-            addMessage("You gave away half of your yeast!");
-            Resources.good += Math.round(yeastLost * health(result.removed));
-        }
-        Resources.yeast = result.remaining;
+        Resources.good += Resources.bread;
+        Resources.bread = 0;
+        addMessage("You give away your bread to your local middle school. They use it in a bake sale.");
     };
 
     let throwawayButton = document.getElementById("throwaway");
     throwawayButton!.onclick = () => {
         const yeastLost = half(yeastAmount(Resources.yeast));
-        let result = removeYeast(Resources.yeast, yeastLost);
+        let result = removeYeast(Resources.yeast, yeastLost, Resources.jars);
         if (!result) {
             addMessage("There's not enough yeast to throw away!");
             return
@@ -234,11 +307,11 @@ window.onload = () => {
     };
     resetButtons = () => {
         throwawayButton!.style.display = "inline";
-        giveawayButton!.style.display = "inline";
-        anotherJarButton!.style.display = "inline";
-        bakeButton!.style.display = "inline";
+        giveawayButton!.style.display = "none";
+        anotherJarButton!.style.display = "none";
+        bakeButton!.style.display = "none";
         addFoodButton!.style.display = "inline";
-        tradeButton!.style.display = "inline";
+        tradeButton!.style.display = "none";
     };
     onLose = () => {
         throwawayButton!.style.display = "none";

@@ -240,13 +240,13 @@ export function livingYeastAmount(yeast: YeastyGoodness): number {
     return yeast.fed + yeast.happy + yeast.waiting + yeast.hungry + yeast.starving;
 }
 
-export function removeYeast(yeast: YeastyGoodness, amount: number): { remaining: YeastyGoodness, removed: YeastyGoodness } | null {
+export function removeYeast(yeast: YeastyGoodness, amount: number, jars: number): { remaining: YeastyGoodness, removed: YeastyGoodness } | null {
     const takeout = Math.floor(amount);
     const currentAmount = yeastAmount(yeast);
     if (takeout < 1) {
         return null
     }
-    if (takeout > currentAmount - 1) {
+    if (takeout > currentAmount - jars) {
         return null
     }
     const takeoutFraction = takeout / yeastAmount(yeast);
