@@ -86,7 +86,7 @@ export function mapYeast(yeast: YeastyGoodness, f: (prop: number) => number): Ye
         happy: f(yeast.happy),
         waiting: f(yeast.waiting),
         hungry: f(yeast.hungry),
-        starving: f(yeast.fed),
+        starving: f(yeast.starving),
         dead: f(yeast.dead),
     }
 }
@@ -249,14 +249,16 @@ export function removeYeast(yeast: YeastyGoodness, amount: number, jars: number)
     if (takeout > currentAmount - jars) {
         return null
     }
-    const takeoutFraction = takeout / yeastAmount(yeast);
+    const takeoutFraction = takeout / currentAmount;
+    console.log(`taking out ${takeout}, fraction: ${takeoutFraction}`);
     let removed = mapYeast(yeast, (prop) => Math.min(prop * takeoutFraction, prop));
     let remaining = subtractYeast(yeast, removed);
     // Just in case something went negative!
     remaining = mapYeast(remaining, (prop) => Math.max(0, prop));
-    const removedAmount = yeastAmount(yeast);
+    const removedAmount = yeastAmount(removed);
     if (removedAmount < takeout) {
         removed.dead = removedAmount - takeout;
     }
+    console.log(removed);
     return { remaining: remaining, removed: removed };
 }
