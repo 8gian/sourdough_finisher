@@ -4,33 +4,36 @@
   <script src="build/bun.js"></script>
 </head>
 <body>
+  <div id="splash-screen">
   <p>
-    Total capacity of all jars: <span id="jar-capacity"></span>
+    You decide to move to the town of Sporticus to begin your journey as a master baker.
+  </p>
+  <p>
+    <button id="start-game">Move in</button>    
+  </p>
+  </div>
+  <div id="game">
+  <p>
+    Your <b><span id="jars-filled" Jars></span></b> jars can hold <b><span id="jar-capacity"></span>oz</b> of starter.
     <br>
-    Capacity used: <span id="used"></span>
+    Jars fullness: <span id="used"></span>
+    <br>
+    Starter (usable/total): <span id="usable-starter-amount"></span>oz / <span id="total-starter-amount"></span>oz
     <br>
     Hunger: <span id="hunger"></span>
     <br>
     Health: <span id="health"></span>
-    <br>
-    Spillage: <span id="spillage"></span>
-    <br>
-    Food waste: <span id="waste"></span>
-    <span id="bake-stats">
-    <br>
-    Oven Capacity: <span id="oven-capacity"></span>
-    </span>
   </p>
-  <p>
+  <p id="bread-elem">
     Bread: <span id="stash-bread"></span>
   </p>
   <p>
     <button id="add-food">Add food</button>    
-    <button id="bake">Bake bread</button>
+    <button id="throwaway">Throw away half</button>
     <button id="another-jar">Start another jar</button>
     <button id="trade">Trade some away</button>
+    <button id="bake">Bake bread</button>
     <button id="giveaway">Give away bread</button>
-    <button id="throwaway">Throw away half</button>
     <button id="enter-competition">Enter Baking Competition</button>
     <button id="play-again">Restart game</button>
   </p>
@@ -39,6 +42,7 @@
   <div id="message-log">
   </div>
 
+  <div id="debug" style="display:none">
   <h3>debug</h3>
   <ul>
     <li>Actual quantity: <span id="debug_quantity"></span></li>
@@ -49,5 +53,7 @@
     <li>Starving: <span id="debug_starving"></span></li>
     <li>Dead: <span id="debug_dead"></span></li>
   </ul>
+  </div>
+</div>
 </body>
 </html>
