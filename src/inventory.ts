@@ -1,4 +1,3 @@
-
 const randomItemsSet: string[] = [
   "an old shoe",
   "a frog",
@@ -50,14 +49,17 @@ export class Inventory {
     let itemsReceived = this.bakingItems.length + this.randomItems.length + 1;
     let getBakingItemThreshold = (this.bakingItems.length / itemsReceived);
     let received = "";
-    if (this.randomItemsRemaining.length == 0 || Math.random() > getBakingItemThreshold) {
+    let randItem = Math.random();
+    if (this.randomItemsRemaining.length == 0 || randItem > getBakingItemThreshold) {
       const itemIndex = Math.floor(Math.random() * this.bakingItemsRemaining.length);
       received = this.bakingItemsRemaining[itemIndex];
       this.bakingItemsRemaining.splice(itemIndex, 1);
+      this.bakingItems.push(received);
     } else {
       const itemIndex = Math.floor(Math.random() * this.randomItemsRemaining.length);
       received = this.randomItemsRemaining[itemIndex];
       this.randomItemsRemaining.splice(itemIndex, 1);
+      this.randomItems.push(received);
     }
     this.items.push(received);
 
@@ -71,5 +73,4 @@ export class Inventory {
     }
     itemList.innerHTML = "<li>" + this.items.join("</li><li>") + "</li>";
   }
-
 }
