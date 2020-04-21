@@ -50,7 +50,7 @@ export class Inventory {
     let getBakingItemThreshold = (this.bakingItems.length / itemsReceived);
     let received = "";
     let randItem = Math.random();
-    if (this.randomItemsRemaining.length == 0 || randItem > getBakingItemThreshold) {
+    if (this.bakingItems.length > 0 && (this.randomItemsRemaining.length == 0 || randItem > getBakingItemThreshold)) {
       const itemIndex = Math.floor(Math.random() * this.bakingItemsRemaining.length);
       received = this.bakingItemsRemaining[itemIndex];
       this.bakingItemsRemaining.splice(itemIndex, 1);
