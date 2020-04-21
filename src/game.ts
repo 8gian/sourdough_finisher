@@ -453,7 +453,7 @@ window.onload = () => {
             addMessage("You entered the competition and won 2nd place!")
             playerPrize = 2;
         } else if (playerInventory.bakingItems.length == 6) {
-            addMessage("You entered the competition and won 2nd place!")
+            addMessage("You entered the competition and won 1st place!")
             playerPrize = 3;
         } else {
             addMessage("You entered the competition but didn't place... :( Maybe you need some more tools to make your bread better!")
