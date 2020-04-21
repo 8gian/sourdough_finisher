@@ -13,6 +13,7 @@ import {
 } from './YeastLogic';
 
 import { EventQueue } from "./events";
+import { Inventory } from './inventory';
 
 enum E {
     feed, bake, addJar, giveaway, throwaway, enterCompetition, trade
@@ -30,9 +31,12 @@ let spillage: number = 0;
 let ovenSize: number = 1;
 let canBake: boolean = false;
 let canGiveaway: boolean = false;
+let canTrade: boolean = false;
 let jarVolume: number = 32;
 let gameStarted: boolean = false;
 let filledVolume: number = 0;
+let playerInventory = new Inventory();
+let playerPrize: number = 0;
 
 class IntegralRefillingResource {
     amount: number = 0;
@@ -59,13 +63,12 @@ class IntegralRefillingResource {
         }
         this.remainingEpochs--;
         if (this.remainingEpochs < 1) {
-            if (this.onIncrease) {
-                this.onIncrease();
-            }
             this.remainingEpochs = epr;
             this.amount += ipr;
             if (this.amount > this.limit) {
                 this.amount = this.limit;
+            } else if (this.onIncrease) {
+                this.onIncrease();
             }
         }
     }
@@ -77,6 +80,8 @@ type ResourcesType = {
     bread: number,
     jars: number,
     newJars: IntegralRefillingResource,
+    friendsToTrade: IntegralRefillingResource,
+    competitions: IntegralRefillingResource
 };
 
 let dead: boolean = false;
@@ -87,6 +92,23 @@ function onFindJar() {
         anotherJarButton.style.display = "inline";
     }
     addMessage("You found another jar!");
+}
+
+function onNewFriend() {
+    let tradeButton = document.getElementById("trade");
+    if (tradeButton) {
+        tradeButton.style.display = "inline";
+    }
+    addMessage("A friend asks if they can have some of your starter. They offer a present in return.");
+}
+
+
+function onNewComp() {
+    let enterCompButton = document.getElementById("enter-competition");
+    if (enterCompButton) {
+        enterCompButton.style.display = "inline";
+    }
+    addMessage("You hear about a baking competition! You need 5 loaves to enter.");
 }
 
 function checkFirstBake() {
@@ -103,7 +125,9 @@ let Resources: ResourcesType = {
     good: 0,
     bread: 0,
     jars: 1,
-    newJars: new IntegralRefillingResource(0, 1, 120, 1, onFindJar),
+    newJars: new IntegralRefillingResource(0, 1, 120, 1),
+    friendsToTrade: new IntegralRefillingResource(1, 1, 60, 1),
+    competitions: new IntegralRefillingResource(0, 1, 245, 1),
 };
 
 let resetButtons = () => { };
@@ -128,6 +152,7 @@ function initializeGame() {
     dead = false;
     canBake = false;
     canGiveaway = false;
+    playerPrize = 0;
     events.clearAll();
     Resources = {
         yeast: { fed: 2, happy: 0, waiting: 0, hungry: 0, starving: 0, dead: 1 },
@@ -135,7 +160,10 @@ function initializeGame() {
         bread: 0,
         jars: 1,
         newJars: new IntegralRefillingResource(0, 1, 120, 1, onFindJar),
+        friendsToTrade: new IntegralRefillingResource(0, 1, 55, 1, onNewFriend),
+        competitions: new IntegralRefillingResource(0, 1, 245, 1, onNewComp),
     };
+    playerInventory = new Inventory();
     resetButtons();
     addMessage("Unfortunately, you are starting from scratch. Your friend has given you a starter, but you'll need to feed it. He says that he already fed it so you might want to wait a bit.");
     runStartInMS = createjs.Ticker.getTime(true);
@@ -166,6 +194,18 @@ function setElementHTML(id: string, contents: string) {
     elem.innerHTML = contents;
 }
 
+function placedText(): string {
+    if (playerPrize < 1) {
+        return "You never placed in competition";
+    } else if (playerPrize >= 1 && playerPrize < 2) {
+        return "You reached third place in competition!"
+    } else if (playerPrize >= 2 && playerPrize < 3) {
+        return "You reached second place in competition!"
+    } else {
+        return "Wow, you reached first place in competition and achieved your goal of becoming a master baker!"
+    }
+}
+
 function render() {
     // Render the jar
     document.getElementById('jar-capacity')!.innerText = '' + jarVolume;
@@ -176,7 +216,10 @@ function render() {
     document.getElementById('hunger')!.innerText = `${Math.round(hunger(Resources.yeast) * 100)}%`;
     document.getElementById('health')!.innerText = `${Math.round(health(Resources.yeast) * 100)}%`;
     document.getElementById('stash-bread')!.innerText = `${Resources.bread}`;
+    document.getElementById('food-waste')!.innerText = `${Math.round(spillage)}`;
     setElementHTML('message-log', renderMessages(messages));
+    setElement("place-reached", placedText())
+    setElement("loaves-donated", "" + Resources.good);
 
     const fractions: YeastyGoodness = calculateFractions(Resources.yeast);
     setElement(
@@ -203,6 +246,8 @@ function evolveResources(epochs: number) {
     for (let i = 0; i < epochs; i++) {
         Resources.yeast = stepYeast(Resources.yeast);
         Resources.newJars.step();
+        Resources.friendsToTrade.step();
+        Resources.competitions.step();
     }
     checkFirstBake();
 }
@@ -237,9 +282,8 @@ function gameLoop(event: createjs.TickerEvent): void {
     render();
 }
 
-
 function addFood() {
-    // console.log('Adding food')!;
+    // console.log('Adding food')!;k
     // console.log(Resources.yeast);
     const oldHealth = health(Resources.yeast);
 
@@ -263,6 +307,8 @@ let onLose = () => { };
 window.onload = () => {
     let gameDiv = document.getElementById('game');
     gameDiv!.style.display = "none";
+    let inventoryDiv = document.getElementById("inventory");
+    inventoryDiv!.style.display = "none";
     // Add button click listeners
     let addFoodButton = document.getElementById('add-food');
     addFoodButton!.onclick = () => {
@@ -350,17 +396,68 @@ window.onload = () => {
     tradeButton!.onclick = () => {
         events.addEvent(E[E.trade]);
     };
-    let onTrade = () => {
+    function enoughToTrade(): number | null {
+        let tradeAmount = Math.floor(Math.min(yeastAmount(Resources.yeast) - Resources.jars, 4));
+        if (tradeAmount < 4) {
+            return null;
+        }
+        return tradeAmount;
+    }
+    function onTrade() {
+        let tradeAmount = enoughToTrade()
+        if (!tradeAmount) {
+            addMessage("You don't have enough starter to trade away.");
+            return
+        }
+        let result = removeYeast(Resources.yeast, tradeAmount, Resources.jars);
+        if (!result) {
+            addMessage("You don't have enough starter to trade away.");
+            return
+        }
+        Resources.yeast = result.remaining;
+        Resources.friendsToTrade.amount--;
+        if (health(result.removed) < 0) {
+            addMessage("Your friend reports that the starter wouldn't grow for them and doesn't give you anything.");
+        } else {
+            inventoryDiv!.style.display = "block";
+            const item = playerInventory.addNewItem();
+            addMessage("You trade your friend some starter for " + item);
+            playerInventory.render("item-list");
+        }
 
     };
     events.addEventListener(E[E.trade], onTrade);
 
+    function enoughForComp(): number | null {
+        if (Resources.bread > 5) {
+            return 5;
+        }
+        return null;
+    }
     let enterCompetitionButton = document.getElementById("enter-competition");
     enterCompetitionButton!.onclick = () => {
         events.addEvent(E[E.enterCompetition]);
     };
     let onEnterCompetition = () => {
-
+        let enterCompAmount = enoughForComp();
+        if (!enterCompAmount) {
+            addMessage("You don't have enough bread to enter into the competition. You need 5 loaves.");
+            return
+        }
+        Resources.bread -= 5;
+        if (playerInventory.bakingItems.length == 4) {
+            addMessage("You entered the competition and won 3rd place!")
+            playerPrize = 1;
+        } else if (playerInventory.bakingItems.length == 5) {
+            addMessage("You entered the competition and won 2nd place!")
+            playerPrize = 2;
+        } else if (playerInventory.bakingItems.length == 6) {
+            addMessage("You entered the competition and won 2nd place!")
+            playerPrize = 3;
+        } else {
+            addMessage("You entered the competition but didn't place... :( Maybe you need some more tools to make your bread better!")
+            playerPrize = 0;
+        }
     };
     events.addEventListener(E[E.enterCompetition], onEnterCompetition);
 
@@ -394,6 +491,7 @@ window.onload = () => {
             addMessage("There's not enough yeast to throw away and still keep enough for growing.");
             return
         }
+        spillage += yeastLost;
         Resources.yeast = result.remaining;
         addMessage("You threw away half of your starter!");
     };
@@ -408,6 +506,7 @@ window.onload = () => {
     gotoStart = () => {
         splashScreenDiv!.style.display = "block";
         gameDiv!.style.display = "none";
+        inventoryDiv!.style.display = "none";
     }
 
     resetButtons = () => {
@@ -420,6 +519,7 @@ window.onload = () => {
         enterCompetitionButton!.style.display = "none";
         splashScreenDiv!.style.display = "none";
         gameDiv!.style.display = "block";
+        inventoryDiv!.style.display = "none";
     };
     onAllowBake = () => {
         canBake = true;
@@ -442,6 +542,16 @@ window.onload = () => {
             (<HTMLButtonElement>giveawayButton)!.disabled = false;
         } else {
             (<HTMLButtonElement>giveawayButton)!.disabled = true;
+        }
+        if (enoughToTrade()) {
+            (<HTMLButtonElement>tradeButton)!.disabled = false;
+        } else {
+            (<HTMLButtonElement>bakeButton)!.disabled = true;
+        }
+        if (enoughForComp()) {
+            (<HTMLButtonElement>enterCompetitionButton)!.disabled = false;
+        } else {
+            (<HTMLButtonElement>enterCompetitionButton)!.disabled = true;
         }
     }
 

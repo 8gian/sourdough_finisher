@@ -11,7 +11,7 @@
 <body>
   <div id="splash-screen">
   <p>
-    You decide to move to the town of Sporticus to begin your journey as a master baker.
+    You decide to move to the town of Sporticus and win over the town with your baking! You set an aggressive goal of 1 year to get this done.
   </p>
   <p>
     <button id="start-game">Move in</button>    
@@ -48,6 +48,23 @@
   <div id="message-log">
   </div>
 
+  <div id=inventory>
+  <h3>Items received</h3>
+  <ul id="item-list">
+  </ul>
+  </div>
+
+  <div id=achievements></div>
+    <h3>Achievements</h3>
+    <p>
+    Loaves given away: <span id="loaves-donated"></span>
+    <br>
+    <span id="place-reached"></span>
+    <br>
+    Food Waste: <span id="food-waste"></span>oz
+    </p>
+  </div>
+
   <div id="debug" style="display:none">
   <h3>debug</h3>
   <ul>
@@ -61,5 +78,9 @@
   </ul>
   </div>
 </div>
+<h3>Music</h3>
+<audio controls loop autoplay>
+  <source src="./res/game_music.wav" type="audio/wav">
+</audio>
 </body>
 </html>
