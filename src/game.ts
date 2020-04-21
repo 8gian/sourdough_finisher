@@ -160,7 +160,7 @@ function initializeGame() {
         bread: 0,
         jars: 1,
         newJars: new IntegralRefillingResource(0, 1, 120, 1, onFindJar),
-        friendsToTrade: new IntegralRefillingResource(0, 1, 3, 1, onNewFriend),
+        friendsToTrade: new IntegralRefillingResource(0, 1, 32, 1, onNewFriend),
         competitions: new IntegralRefillingResource(0, 1, 189, 1, onNewComp),
     };
     playerInventory = new Inventory();
