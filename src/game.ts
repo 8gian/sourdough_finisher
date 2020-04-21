@@ -570,6 +570,7 @@ window.onload = () => {
     let startGameButton = document.getElementById('start-game');
     startGameButton!.onclick = () => {
         initializeGame();
+        document.getElementById('bg-music').play()
     }
 }
 
