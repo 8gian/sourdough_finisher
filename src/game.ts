@@ -418,8 +418,12 @@ window.onload = () => {
         } else {
             inventoryDiv!.style.display = "block";
             const item = playerInventory.addNewItem();
-            addMessage("You trade your friend some starter for " + item);
-            playerInventory.render("item-list");
+            if (item) {
+                addMessage("You trade your friend some starter for " + item);
+                playerInventory.render("item-list");
+            } else {
+                addMessage("Your friend accepts the starter but lied and doesn't have anything to give you.");
+            }
         }
 
     };
@@ -567,7 +571,7 @@ window.onload = () => {
     let startGameButton = document.getElementById('start-game');
     startGameButton!.onclick = () => {
         initializeGame();
-        document.getElementById('bg-music').play()
+        (<HTMLAudioElement>document.getElementById('bg-music'))!.play();
     }
 }
 

@@ -34,4 +34,3 @@ Session.vim
 node_modules
 
 # Ignore build product(s)
-dist/build
