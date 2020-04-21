@@ -126,7 +126,7 @@ let Resources: ResourcesType = {
     bread: 0,
     jars: 1,
     newJars: new IntegralRefillingResource(0, 1, 120, 1),
-    friendsToTrade: new IntegralRefillingResource(1, 1, 60, 1),
+    friendsToTrade: new IntegralRefillingResource(1, 1, 32, 1),
     competitions: new IntegralRefillingResource(0, 1, 245, 1),
 };
 
@@ -160,8 +160,8 @@ function initializeGame() {
         bread: 0,
         jars: 1,
         newJars: new IntegralRefillingResource(0, 1, 120, 1, onFindJar),
-        friendsToTrade: new IntegralRefillingResource(0, 1, 55, 1, onNewFriend),
-        competitions: new IntegralRefillingResource(0, 1, 245, 1, onNewComp),
+        friendsToTrade: new IntegralRefillingResource(0, 1, 3, 1, onNewFriend),
+        competitions: new IntegralRefillingResource(0, 1, 189, 1, onNewComp),
     };
     playerInventory = new Inventory();
     resetButtons();
@@ -283,12 +283,9 @@ function gameLoop(event: createjs.TickerEvent): void {
 }
 
 function addFood() {
-    // console.log('Adding food')!;k
-    // console.log(Resources.yeast);
     const oldHealth = health(Resources.yeast);
 
     Resources.yeast = feedYeast(1, Resources.yeast);
-    //console.log(Resources.yeast);
     const [newYeast, newSpill] = clampYeast(jarVolume, Resources.yeast);
     Resources.yeast = newYeast;
     spillage += newSpill;
@@ -416,7 +413,7 @@ window.onload = () => {
         }
         Resources.yeast = result.remaining;
         Resources.friendsToTrade.amount--;
-        if (health(result.removed) < 0) {
+        if (health(result.removed) < .7) {
             addMessage("Your friend reports that the starter wouldn't grow for them and doesn't give you anything.");
         } else {
             inventoryDiv!.style.display = "block";
@@ -429,7 +426,7 @@ window.onload = () => {
     events.addEventListener(E[E.trade], onTrade);
 
     function enoughForComp(): number | null {
-        if (Resources.bread > 5) {
+        if (Resources.bread >= 5) {
             return 5;
         }
         return null;
